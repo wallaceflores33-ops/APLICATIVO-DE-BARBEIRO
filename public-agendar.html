@@ -38,6 +38,7 @@ const params = new URLSearchParams(location.search);
 const slug = params.get('slug');
 
 function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
+function appendHTML(parent, html){ const d=document.createElement('div'); d.innerHTML=html.trim(); while(d.firstChild) parent.appendChild(d.firstChild); }
 function fmtMoney(v){ return 'R$ ' + Number(v||0).toFixed(2).replace('.',','); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 
@@ -57,9 +58,9 @@ async function load(){
 
 function renderForm(tenant, servicos, membros){
   box.innerHTML = '';
-  box.appendChild(el(`<div class="brandmark">${tenant.nome.toUpperCase()}</div><h1 style="font-size:28px; margin:0 0 4px;">Agendar horário</h1><p class="lead">Escolha o profissional, o serviço e o horário.</p>`));
+  appendHTML(box, `<div class="brandmark">${tenant.nome.toUpperCase()}</div><h1 style="font-size:28px; margin:0 0 4px;">Agendar horário</h1><p class="lead">Escolha o profissional, o serviço e o horário.</p>`);
   box.appendChild(el(`<div id="formMsg"></div>`));
-  const form = el(`
+  appendHTML(box, `
     <div class="field"><label>Profissional</label><select id="fMembro">${membros.map(m=>`<option value="${m.id}">${m.nome}</option>`).join('')}</select></div>
     <div class="field"><label>Serviço</label><select id="fServico">${servicos.map(s=>`<option value="${s.id}">${s.nome} — ${fmtMoney(s.preco)}</option>`).join('')}</select></div>
     <div class="field"><label>Data</label><input id="fData" type="date" value="${todayISO()}"></div>
@@ -67,7 +68,6 @@ function renderForm(tenant, servicos, membros){
     <div class="field"><label>Seu nome</label><input id="fNome" placeholder="Nome completo"></div>
     <div class="field"><label>WhatsApp</label><input id="fWhats" placeholder="(11) 91234-5678"></div>
   `);
-  box.appendChild(form);
   const btn = el(`<button class="btn" id="btnConfirmar">CONFIRMAR AGENDAMENTO</button>`);
   box.appendChild(btn);
 
