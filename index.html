@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda Fácil — Painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0b09; --bg-2:#14100c; --sidebar:#100c0a;
+  --surface:#1c1712; --surface-2:#241e17;
+  --gold:#c9974a; --gold-bright:#e6bd7a;
+  --crimson:#8c2f2f; --crimson-bright:#b64545;
+  --cream:#f1e6d6; --muted:#9c8f79; --line:rgba(201,151,74,0.20);
+  --ok:#7a9d6f; --shadow:0 20px 50px -20px rgba(0,0,0,0.7);
+}
+*{box-sizing:border-box;}
+html,body{margin:0; padding:0;}
+body{
+  background:radial-gradient(ellipse 900px 500px at 100% -10%, rgba(201,151,74,0.08), transparent 55%), var(--bg);
+  color:var(--cream); font-family:'Fraunces',serif; min-height:100vh;
+}
+h1,h2,h3,.display{font-family:'Bebas Neue',sans-serif; letter-spacing:.03em;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+a{color:var(--gold-bright);}
+button{font-family:inherit;}
+
+/* ---- login ---- */
+.login-wrap{min-height:100vh; display:flex; align-items:center; justify-content:center;}
+.login-box{max-width:420px; width:100%; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:36px; box-shadow:var(--shadow); animation:fadeUp .5s ease both;}
+.login-box .brandmark{display:flex; align-items:center; gap:10px; margin-bottom:22px;}
+.login-box .brandmark .name{font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--gold-bright); letter-spacing:.05em;}
+.login-box h2{font-size:32px; margin:0 0 4px;}
+.login-box p{color:var(--muted); font-size:14px; margin:0 0 24px;}
+.field{display:flex; flex-direction:column; gap:6px; margin-bottom:16px;}
+label{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.07em; color:var(--muted); text-transform:uppercase;}
+input,select,textarea{
+  background:var(--bg-2); border:1px solid var(--line); border-radius:8px; padding:12px 13px;
+  color:var(--cream); font-family:'Fraunces',serif; font-size:14.5px; outline:none; transition:border-color .2s ease;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);}
+.btn{font-family:'Bebas Neue',sans-serif; letter-spacing:.05em; font-size:16px; padding:13px 22px; border-radius:7px; cursor:pointer; border:2px solid transparent; transition:all .18s ease;}
+.btn-primary{background:var(--gold); color:#1a1208;}
+.btn-primary:hover{transform:translateY(-2px); box-shadow:0 10px 22px -8px rgba(201,151,74,.5);}
+.btn-outline{background:transparent; border-color:var(--line); color:var(--cream);}
+.btn-outline:hover{border-color:var(--gold); color:var(--gold-bright);}
+.btn-danger{background:var(--crimson); color:var(--cream);}
+.btn-danger:hover{background:var(--crimson-bright);}
+.btn-sm{font-size:12.5px; padding:7px 12px; border-radius:6px;}
+.btn:disabled{opacity:.35; cursor:not-allowed;}
+.footnote{margin-top:18px; text-align:left; color:var(--muted); font-size:11.5px; font-family:'IBM Plex Mono',monospace; opacity:.75;}
+
+/* ---- shell ---- */
+.shell{display:flex; min-height:100vh;}
+.sidebar{
+  width:238px; flex-shrink:0; background:var(--sidebar); border-right:1px solid var(--line);
+  display:flex; flex-direction:column; padding:24px 0; position:sticky; top:0; height:100vh;
+}
+.sidebar .brandmark{display:flex; align-items:center; gap:10px; padding:0 22px 22px; border-bottom:1px solid var(--line); margin-bottom:14px;}
+.sidebar .brandmark .name{font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--gold-bright); letter-spacing:.05em;}
+.nav-item{
+  display:flex; align-items:center; gap:12px; padding:12px 22px; color:var(--muted); cursor:pointer;
+  font-size:14.5px; border-left:3px solid transparent; transition:all .18s ease;
+}
+.nav-item .ic{font-size:16px; width:20px; text-align:center;}
+.nav-item:hover{color:var(--cream); background:rgba(201,151,74,0.06);}
+.nav-item.active{color:var(--gold-bright); border-left-color:var(--gold); background:rgba(201,151,74,0.09);}
+.nav-spacer{flex:1;}
+.nav-item.logout{border-top:1px solid var(--line); margin-top:8px; padding-top:16px; color:var(--muted);}
+
+.main{flex:1; padding:30px 36px 60px; overflow-x:hidden;}
+.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:26px; flex-wrap:wrap; gap:14px;}
+.topbar h1{font-size:32px; margin:0; color:var(--cream);}
+.trial-chip{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--gold-bright);
+  border:1px solid var(--line); padding:7px 13px; border-radius:999px; display:flex; align-items:center; gap:8px;
+}
+.trial-chip.locked{color:var(--crimson-bright); border-color:var(--crimson-bright);}
+
+section.view{animation:fadeUp .4s ease both;}
+
+/* dashboard cards */
+.kpi-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-bottom:26px;}
+.kpi-card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px 20px;}
+.kpi-card .lbl{color:var(--muted); font-size:12.5px; margin-bottom:8px;}
+.kpi-card .val{font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--gold-bright);}
+.charts-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:26px;}
+.chart-card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:20px;}
+.chart-card h3{font-size:15px; font-family:'Fraunces',serif; font-weight:600; margin:0 0 16px; color:var(--cream);}
+.bars{display:flex; align-items:flex-end; gap:6px; height:120px;}
+.bar-col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;}
+.bar{width:100%; background:linear-gradient(180deg,var(--gold-bright),var(--gold)); border-radius:3px 3px 0 0; min-height:2px;}
+.bar-col .lbl{font-size:9.5px; color:var(--muted); margin-top:6px; font-family:'IBM Plex Mono',monospace;}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:22px;}
+.panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+.panel-head h3{font-size:15px; font-family:'Fraunces',serif; font-weight:600; margin:0; color:var(--cream);}
+
+/* tables */
+table{width:100%; border-collapse:collapse; font-size:14px;}
+th{text-align:left; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.05em; text-transform:uppercase; padding:10px 12px; border-bottom:1px solid var(--line);}
+td{padding:12px; border-bottom:1px solid var(--line); color:var(--cream);}
+tr:last-child td{border-bottom:none;}
+.badge{font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:3px 9px; border-radius:999px; border:1px solid var(--ok); color:var(--ok);}
+.badge.warn{border-color:var(--gold); color:var(--gold-bright);}
+.badge.off{border-color:var(--muted); color:var(--muted);}
+.badge.danger{border-color:var(--crimson-bright); color:var(--crimson-bright);}
+.row-actions{display:flex; gap:8px;}
+.empty{color:var(--muted); text-align:center; padding:36px; border:1px dashed var(--line); border-radius:10px;}
+
+/* modal */
+.modal-overlay{position:fixed; inset:0; background:rgba(8,6,4,.72); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; z-index:300; padding:20px; animation:fadeUp .2s ease both;}
+.modal{background:var(--surface-2); border:1px solid var(--gold); border-radius:14px; padding:28px; max-width:460px; width:100%; box-shadow:var(--shadow); max-height:88vh; overflow:auto;}
+.modal h3{font-size:24px; margin:0 0 18px; color:var(--gold-bright);}
+.modal-actions{display:flex; gap:10px; margin-top:18px; justify-content:flex-end;}
+.form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.form-grid .full{grid-column:1/-1;}
+
+.link-box{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+.link-box .url{font-family:'IBM Plex Mono',monospace; color:var(--gold-bright); font-size:14px;}
+
+.paywall{background:linear-gradient(160deg, rgba(140,47,47,0.14), var(--surface)); border:1px solid var(--crimson-bright); border-radius:14px; padding:30px; text-align:center; margin-bottom:24px;}
+.paywall h3{font-size:28px; margin:0 0 8px; color:var(--cream);}
+.paywall p{color:var(--muted); max-width:440px; margin:0 auto 18px; font-size:14.5px;}
+
+.razor-sweep{position:fixed; inset:0; z-index:999; pointer-events:none; background:linear-gradient(100deg, transparent 45%, var(--gold) 49%, var(--cream) 50%, var(--gold) 51%, transparent 55%); transform:translateX(-120%); opacity:0;}
+.razor-sweep.run{animation:sweep .7s cubic-bezier(.7,0,.3,1) forwards;}
+@keyframes sweep{0%{transform:translateX(-120%); opacity:1;} 60%{opacity:1;} 100%{transform:translateX(120%); opacity:0;}}
+@keyframes fadeUp{from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);}}
+
+@media (max-width:860px){
+  .shell{flex-direction:column;}
+  .sidebar{width:100%; height:auto; flex-direction:row; overflow-x:auto; position:relative; padding:12px;}
+  .sidebar .brandmark{display:none;}
+  .nav-item{padding:10px 14px; border-left:none; border-bottom:3px solid transparent; white-space:nowrap;}
+  .nav-item.active{border-bottom-color:var(--gold);}
+  .nav-spacer{display:none;}
+  .charts-grid, .form-grid{grid-template-columns:1fr;}
+  .main{padding:20px;}
+}
+</style>
+</head>
+<body>
+<div class="razor-sweep" id="sweep"></div>
+<div id="root"></div>
+
+<script>
+// ================= DADOS (em memória — reinicia ao recarregar) =================
+const uid = (p)=> p+'_'+Math.random().toString(36).slice(2,9);
+
+const state = {
+  loggedIn:false,
+  view:'dashboard',
+  tenant:{ nome:'Minha Barbearia', slug:'minha-barbearia', status:'trial', trialLimit:5, plano:null },
+  membros:[
+    {id:uid('m'), nome:"Ronaldo Silva", especialidade:"Cortes clássicos & barba", ativo:true},
+    {id:uid('m'), nome:"Bruno Mendes", especialidade:"Degradê & desenho", ativo:true},
+  ],
+  servicos:[
+    {id:uid('s'), nome:'Corte Clássico', duracao:30, preco:45},
+    {id:uid('s'), nome:'Barba na Navalha', duracao:25, preco:35},
+    {id:uid('s'), nome:'Combo Corte + Barba', duracao:50, preco:70},
+  ],
+  disponibilidade:[], // {id, membroId, diaSemana(0-6), inicio, fim}
+  clientes:[],
+  agendamentos:[], // {id, membroId, servicoId, clienteId, dataHora(ISO), status, valor}
+  lancamentos:[], // {id, tipo:'entrada'|'saida', descricao, valor, data}
+  publicMode:false,
+  publicBooking:{ membroId:null, servicoId:null, data:'', hora:'', nome:'', whatsapp:'' },
+};
+
+const DOW = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const root = document.getElementById('root');
+const sweepEl = document.getElementById('sweep');
+function runSweep(cb){ sweepEl.classList.remove('run'); void sweepEl.offsetWidth; sweepEl.classList.add('run'); setTimeout(cb,380); }
+function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
+function fmtMoney(v){ return 'R$ ' + Number(v||0).toFixed(2).replace('.',','); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+function trialTotal(){ return state.agendamentos.length; }
+function isLocked(){ return state.tenant.status==='trial' && trialTotal() >= state.tenant.trialLimit; }
+
+// ================= NAV =================
+const NAV = [
+  {key:'dashboard', label:'Dashboard', ic:'▦'},
+  {key:'servicos', label:'Serviços', ic:'✂'},
+  {key:'equipe', label:'Equipe', ic:'👥'},
+  {key:'disponibilidade', label:'Disponibilidade', ic:'🕐'},
+  {key:'agendamentos', label:'Agendamentos', ic:'📅'},
+  {key:'clientes', label:'Clientes', ic:'👤'},
+  {key:'financeiro', label:'Financeiro', ic:'💰'},
+  {key:'linkpublico', label:'Link Público', ic:'🔗'},
+  {key:'configuracoes', label:'Configurações', ic:'⚙'},
+];
+
+function render(){
+  root.innerHTML='';
+  if(state.publicMode) return renderPublicBooking();
+  if(!state.loggedIn) return renderLogin();
+  renderShell();
+}
+
+function renderLogin(){
+  root.appendChild(el(`
+    <div class="login-wrap">
+      <div class="login-box">
+        <div class="brandmark">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M6 4L18 16M14 4L6 16" stroke="#c9974a" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="18" r="2.2" stroke="#e6bd7a" stroke-width="1.4"/><circle cx="19" cy="18" r="2.2" stroke="#e6bd7a" stroke-width="1.4"/></svg>
+          <span class="name">AGENDA FÁCIL</span>
+        </div>
+        <h2>Entrar no painel</h2>
+        <p>Gerencie serviços, equipe, agenda e financeiro em um só lugar.</p>
+        <div class="field"><label>Nome</label><input id="lNome" placeholder="Seu nome"></div>
+        <div class="field"><label>E-mail</label><input id="lEmail" placeholder="voce@suabarbearia.com"></div>
+        <div class="field"><label>Senha</label><input id="lSenha" type="password" placeholder="••••••••"></div>
+        <button class="btn btn-primary" style="width:100%;" id="btnLogin">ENTRAR</button>
+        <div class="footnote">Login simulado neste protótipo. Em produção isso seria autenticado via Supabase Auth (ver estrutura de backend).</div>
+      </div>
+    </div>`));
+  document.getElementById('btnLogin').onclick=()=>{
+    const nome=document.getElementById('lNome').value.trim();
+    const email=document.getElementById('lEmail').value.trim();
+    const senha=document.getElementById('lSenha').value.trim();
+    if(!nome||!email||!senha){ alert('Preenche nome, e-mail e senha.'); return; }
+    state.loggedIn=true; state.proNome=nome; state.view='dashboard'; render();
+  };
+}
+
+function renderShell(){
+  const shell = el(`<div class="shell"></div>`);
+  const sidebar = el(`
+    <div class="sidebar">
+      <div class="brandmark">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M6 4L18 16M14 4L6 16" stroke="#c9974a" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="18" r="2" stroke="#e6bd7a" stroke-width="1.4"/><circle cx="19" cy="18" r="2" stroke="#e6bd7a" stroke-width="1.4"/></svg>
+        <span class="name">AGENDA FÁCIL</span>
+      </div>
+    </div>`);
+  NAV.forEach(n=>{
+    const item = el(`<div class="nav-item ${state.view===n.key?'active':''}"><span class="ic">${n.ic}</span>${n.label}</div>`);
+    item.onclick=()=>{ state.view=n.key; render(); };
+    sidebar.appendChild(item);
+  });
+  sidebar.appendChild(el(`<div class="nav-spacer"></div>`));
+  const logout = el(`<div class="nav-item logout"><span class="ic">↩</span>Sair</div>`);
+  logout.onclick=()=>{ state.loggedIn=false; render(); };
+  sidebar.appendChild(logout);
+  shell.appendChild(sidebar);
+
+  const main = el(`<div class="main"></div>`);
+  const topbar = el(`
+    <div class="topbar">
+      <h1>${NAV.find(n=>n.key===state.view).label}</h1>
+      <div class="trial-chip ${isLocked()?'locked':''}">${isLocked() ? '🔒 teste esgotado' : (state.tenant.status==='trial' ? `teste: ${trialTotal()}/${state.tenant.trialLimit} agendamentos` : '✓ plano ativo')}</div>
+    </div>`);
+  main.appendChild(topbar);
+  const body = el(`<div id="viewBody"></div>`);
+  main.appendChild(body);
+  shell.appendChild(main);
+  root.appendChild(shell);
+
+  const renderers = {
+    dashboard:renderDashboard, servicos:renderServicos, equipe:renderEquipe,
+    disponibilidade:renderDisponibilidade, agendamentos:renderAgendamentos,
+    clientes:renderClientes, financeiro:renderFinanceiro,
+    linkpublico:renderLinkPublico, configuracoes:renderConfiguracoes,
+  };
+  renderers[state.view](body);
+}
+
+// ================= MODAL GENÉRICO =================
+function openModal(title, fields, onSubmit, opts={}){
+  const overlay = el(`<div class="modal-overlay"></div>`);
+  const modal = el(`<div class="modal"><h3>${title}</h3><div class="form-grid" id="mFields"></div><div class="modal-actions"></div></div>`);
+  const fWrap = modal.querySelector('#mFields');
+  fields.forEach(f=>{
+    const wrap = el(`<div class="field ${f.full?'full':''}"><label>${f.label}</label></div>`);
+    let input;
+    if(f.type==='select'){
+      input = el(`<select id="f_${f.key}">${f.options.map(o=>`<option value="${o.value}" ${o.value==f.value?'selected':''}>${o.label}</option>`).join('')}</select>`);
+    } else if(f.type==='textarea'){
+      input = el(`<textarea id="f_${f.key}">${f.value||''}</textarea>`);
+    } else {
+      input = el(`<input id="f_${f.key}" type="${f.type||'text'}" value="${f.value!=null?f.value:''}" placeholder="${f.placeholder||''}">`);
+    }
+    wrap.appendChild(input);
+    fWrap.appendChild(wrap);
+  });
+  const actions = modal.querySelector('.modal-actions');
+  const cancel = el(`<button class="btn btn-outline">CANCELAR</button>`);
+  cancel.onclick=()=>overlay.remove();
+  const submit = el(`<button class="btn btn-primary">${opts.submitLabel||'SALVAR'}</button>`);
+  submit.onclick=()=>{
+    const values={};
+    fields.forEach(f=>{ values[f.key]=document.getElementById('f_'+f.key).value; });
+    const ok = onSubmit(values);
+    if(ok!==false) overlay.remove();
+  };
+  actions.appendChild(cancel); actions.appendChild(submit);
+  overlay.onclick=(e)=>{ if(e.target===overlay) overlay.remove(); };
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
+// ================= DASHBOARD =================
+function renderDashboard(body){
+  const now = new Date();
+  const concluidos = state.agendamentos.filter(a=>a.status==='concluido');
+  const hojeStr = todayISO();
+  const faturamentoHoje = concluidos.filter(a=>a.dataHora.slice(0,10)===hojeStr).reduce((s,a)=>s+a.valor,0);
+  const mesAtual = now.toISOString().slice(0,7);
+  const doMes = concluidos.filter(a=>a.dataHora.slice(0,7)===mesAtual);
+  const faturamentoMes = doMes.reduce((s,a)=>s+a.valor,0);
+  const ticketMedio = doMes.length ? faturamentoMes/doMes.length : 0;
+
+  body.appendChild(el(`
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="lbl">Faturamento Hoje</div><div class="val">${fmtMoney(faturamentoHoje)}</div></div>
+      <div class="kpi-card"><div class="lbl">Faturamento do Mês</div><div class="val">${fmtMoney(faturamentoMes)}</div></div>
+      <div class="kpi-card"><div class="lbl">Atendimentos (mês)</div><div class="val">${doMes.length}</div></div>
+      <div class="kpi-card"><div class="lbl">Ticket Médio</div><div class="val">${fmtMoney(ticketMedio)}</div></div>
+    </div>`));
+
+  if(isLocked()){
+    const pw = el(`
+      <div class="paywall">
+        <h3>Seu teste grátis acabou</h3>
+        <p>Você já usou os ${state.tenant.trialLimit} agendamentos gratuitos. Assine pra continuar recebendo clientes.</p>
+        <button class="btn btn-danger" id="pwBtn">ASSINAR VIA GREENN — R$ 49,90/mês</button>
+      </div>`);
+    pw.querySelector('#pwBtn').onclick = greennExplain;
+    body.appendChild(pw);
+  }
+
+  // gráfico últimos 14 dias
+  const days14 = Array.from({length:14}).map((_,i)=>{
+    const d=new Date(now); d.setDate(now.getDate()-(13-i));
+    return d.toISOString().slice(0,10);
+  });
+  const maxVal = Math.max(1, ...days14.map(dk=> concluidos.filter(a=>a.dataHora.slice(0,10)===dk).reduce((s,a)=>s+a.valor,0)));
+  const chart1 = el(`<div class="chart-card"><h3>Faturamento (últimos 14 dias)</h3><div class="bars"></div></div>`);
+  const barsWrap = chart1.querySelector('.bars');
+  days14.forEach(dk=>{
+    const v = concluidos.filter(a=>a.dataHora.slice(0,10)===dk).reduce((s,a)=>s+a.valor,0);
+    const h = Math.max(2, (v/maxVal)*100);
+    barsWrap.appendChild(el(`<div class="bar-col"><div class="bar" style="height:${h}%"></div><span class="lbl">${dk.slice(8,10)}/${dk.slice(5,7)}</span></div>`));
+  });
+  const maxAt = Math.max(1, ...days14.map(dk=> concluidos.filter(a=>a.dataHora.slice(0,10)===dk).length));
+  const chart2 = el(`<div class="chart-card"><h3>Atendimentos (últimos 14 dias)</h3><div class="bars"></div></div>`);
+  const barsWrap2 = chart2.querySelector('.bars');
+  days14.forEach(dk=>{
+    const c = concluidos.filter(a=>a.dataHora.slice(0,10)===dk).length;
+    const h = Math.max(2, (c/maxAt)*100);
+    barsWrap2.appendChild(el(`<div class="bar-col"><div class="bar" style="height:${h}%"></div><span class="lbl">${dk.slice(8,10)}/${dk.slice(5,7)}</span></div>`));
+  });
+  const chartsGrid = el(`<div class="charts-grid"></div>`);
+  chartsGrid.appendChild(chart1); chartsGrid.appendChild(chart2);
+  body.appendChild(chartsGrid);
+
+  const proximos = state.agendamentos.filter(a=>a.status==='confirmado' && a.dataHora >= new Date().toISOString())
+    .sort((a,b)=>a.dataHora.localeCompare(b.dataHora)).slice(0,5);
+  const panel = el(`<div class="panel"><div class="panel-head"><h3>Próximos agendamentos</h3><a href="#" id="verTodos">Ver todos →</a></div></div>`);
+  panel.querySelector('#verTodos').onclick=(e)=>{ e.preventDefault(); state.view='agendamentos'; render(); };
+  if(proximos.length===0){
+    panel.appendChild(el(`<div class="empty">Nenhum agendamento próximo.</div>`));
+  } else {
+    proximos.forEach(a=>{
+      const cli = state.clientes.find(c=>c.id===a.clienteId);
+      const serv = state.servicos.find(s=>s.id===a.servicoId);
+      panel.appendChild(el(`<div style="padding:10px 0; border-bottom:1px dashed var(--line); color:var(--cream); font-size:14px;">${cli?cli.nome:'Cliente'} · ${serv?serv.nome:''} · ${a.dataHora.replace('T',' ').slice(0,16)}</div>`));
+    });
+  }
+  body.appendChild(panel);
+}
+
+function greennExplain(){
+  alert('Em produção: este botão abriria o checkout da Greenn. Após o pagamento aprovado, a Greenn dispara um webhook pro backend (ver estrutura de backend entregue), que libera a conta automaticamente. Isso exige um servidor real recebendo esse webhook — este front-end sozinho não processa pagamento.');
+}
+
+// ================= SERVIÇOS =================
+function renderServicos(body){
+  const panel = el(`<div class="panel"><div class="panel-head"><h3>Serviços</h3></div></div>`);
+  const addBtn = el(`<button class="btn btn-primary btn-sm">+ NOVO SERVIÇO</button>`);
+  panel.querySelector('.panel-head').appendChild(addBtn);
+  addBtn.onclick=()=> openModal('Novo serviço', [
+    {key:'nome', label:'Nome do serviço'},
+    {key:'duracao', label:'Duração (min)', type:'number', value:30},
+    {key:'preco', label:'Preço (R$)', type:'number', value:0},
+  ], (v)=>{
+    if(!v.nome){ alert('Dá um nome pro serviço.'); return false; }
+    state.servicos.push({id:uid('s'), nome:v.nome, duracao:Number(v.duracao)||0, preco:Number(v.preco)||0});
+    render();
+  });
+
+  if(state.servicos.length===0){ panel.appendChild(el(`<div class="empty">Nenhum serviço cadastrado ainda.</div>`)); }
+  else {
+    const tbl = el(`<table><thead><tr><th>Nome</th><th>Duração</th><th>Preço</th><th></th></tr></thead><tbody></tbody></table>`);
+    const tbody = tbl.querySelector('tbody');
+    state.servicos.forEach(s=>{
+      const tr = el(`<tr><td>${s.nome}</td><td>${s.duracao} min</td><td>${fmtMoney(s.preco)}</td><td class="row-actions"></td></tr>`);
+      const del = el(`<button class="btn btn-outline btn-sm">excluir</button>`);
+      del.onclick=()=>{ state.servicos = state.servicos.filter(x=>x.id!==s.id); render(); };
+      tr.querySelector('.row-actions').appendChild(del);
+      tbody.appendChild(tr);
+    });
+    panel.appendChild(tbl);
+  }
+  body.appendChild(panel);
+}
+
+// ================= EQUIPE =================
+function renderEquipe(body){
+  const panel = el(`<div class="panel"><div class="panel-head"><h3>Equipe</h3></div></div>`);
+  const addBtn = el(`<button class="btn btn-primary btn-sm">+ NOVO MEMBRO</button>`);
+  panel.querySelector('.panel-head').appendChild(addBtn);
+  addBtn.onclick=()=> openModal('Novo membro da equipe', [
+    {key:'nome', label:'Nome'},
+    {key:'especialidade', label:'Especialidade'},
+  ], (v)=>{
+    if(!v.nome){ alert('Dá um nome.'); return false; }
+    state.membros.push({id:uid('m'), nome:v.nome, especialidade:v.especialidade||'', ativo:true});
+    render();
+  });
+
+  const tbl = el(`<table><thead><tr><th>Nome</th><th>Especialidade</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>`);
+  const tbody = tbl.querySelector('tbody');
+  state.membros.forEach(m=>{
+    const tr = el(`<tr><td>${m.nome}</td><td>${m.especialidade||'—'}</td><td><span class="badge ${m.ativo?'':'off'}">${m.ativo?'ativo':'inativo'}</span></td><td class="row-actions"></td></tr>`);
+    const toggle = el(`<button class="btn btn-outline btn-sm">${m.ativo?'desativar':'ativar'}</button>`);
+    toggle.onclick=()=>{ m.ativo=!m.ativo; render(); };
+    const del = el(`<button class="btn btn-outline btn-sm">excluir</button>`);
+    del.onclick=()=>{ state.membros=state.membros.filter(x=>x.id!==m.id); render(); };
+    tr.querySelector('.row-actions').appendChild(toggle); tr.querySelector('.row-actions').appendChild(del);
+    tbody.appendChild(tr);
+  });
+  panel.appendChild(tbl);
+  body.appendChild(panel);
+}
+
+// ================= DISPONIBILIDADE =================
+function renderDisponibilidade(body){
+  const panel = el(`<div class="panel"><div class="panel-head"><h3>Disponibilidade</h3></div></div>`);
+  const addBtn = el(`<button class="btn btn-primary btn-sm">+ NOVO HORÁRIO</button>`);
+  panel.querySelector('.panel-head').appendChild(addBtn);
+  addBtn.onclick=()=> openModal('Novo horário de disponibilidade', [
+    {key:'membroId', label:'Profissional', type:'select', options: state.membros.map(m=>({value:m.id,label:m.nome}))},
+    {key:'diaSemana', label:'Dia da semana', type:'select', options: DOW.map((d,i)=>({value:i,label:d}))},
+    {key:'inicio', label:'Início', type:'time', value:'09:00'},
+    {key:'fim', label:'Fim', type:'time', value:'18:00'},
+  ], (v)=>{
+    if(!v.membroId){ alert('Cadastre um membro da equipe primeiro.'); return false; }
+    state.disponibilidade.push({id:uid('d'), membroId:v.membroId, diaSemana:Number(v.diaSemana), inicio:v.inicio, fim:v.fim});
+    render();
+  });
+
+  if(state.disponibilidade.length===0){ panel.appendChild(el(`<div class="empty">Nenhuma disponibilidade cadastrada.</div>`)); }
+  else {
+    const tbl = el(`<table><thead><tr><th>Profissional</th><th>Dia</th><th>Horário</th><th></th></tr></thead><tbody></tbody></table>`);
+    const tbody = tbl.querySelector('tbody');
+    state.disponibilidade.forEach(d=>{
+      const m = state.membros.find(x=>x.id===d.membroId);
+      const tr = el(`<tr><td>${m?m.nome:'—'}</td><td>${DOW[d.diaSemana]}</td><td>${d.inicio} — ${d.fim}</td><td class="row-actions"></td></tr>`);
+      const del = el(`<button class="btn btn-outline btn-sm">excluir</button>`);
+      del.onclick=()=>{ state.disponibilidade=state.disponibilidade.filter(x=>x.id!==d.id); render(); };
+      tr.querySelector('.row-actions').appendChild(del);
+      tbody.appendChild(tr);
+    });
+    panel.appendChild(tbl);
+  }
+  body.appendChild(panel);
+}
+
+// ================= AGENDAMENTOS =================
+function renderAgendamentos(body){
+  const panel = el(`<div class="panel"><div class="panel-head"><h3>Agendamentos</h3></div></div>`);
+  const addBtn = el(`<button class="btn btn-primary btn-sm" ${isLocked()?'disabled':''}>+ NOVO AGENDAMENTO</button>`);
+  panel.querySelector('.panel-head').appendChild(addBtn);
+  addBtn.onclick=()=>{
+    if(state.membros.length===0 || state.servicos.length===0){ alert('Cadastre ao menos um membro da equipe e um serviço primeiro.'); return; }
+    openModal('Novo agendamento', [
+      {key:'membroId', label:'Profissional', type:'select', options: state.membros.map(m=>({value:m.id,label:m.nome}))},
+      {key:'servicoId', label:'Serviço', type:'select', options: state.servicos.map(s=>({value:s.id,label:`${s.nome} — ${fmtMoney(s.preco)}`}))},
+      {key:'clienteNome', label:'Nome do cliente'},
+      {key:'clienteWhats', label:'WhatsApp do cliente'},
+      {key:'data', label:'Data', type:'date', value: todayISO()},
+      {key:'hora', label:'Hora', type:'time', value:'09:00'},
+    ], (v)=>{
+      if(!v.clienteNome || !v.clienteWhats){ alert('Preenche nome e WhatsApp do cliente.'); return false; }
+      let cliente = state.clientes.find(c=>c.whatsapp===v.clienteWhats);
+      if(!cliente){ cliente={id:uid('c'), nome:v.clienteNome, whatsapp:v.clienteWhats, email:''}; state.clientes.push(cliente); }
+      const serv = state.servicos.find(s=>s.id===v.servicoId);
+      runSweep(()=>{
+        state.agendamentos.push({id:uid('a'), membroId:v.membroId, servicoId:v.servicoId, clienteId:cliente.id, dataHora:`${v.data}T${v.hora}:00`, status:'confirmado', valor:serv.preco});
+        render();
+      });
+    });
+  };
+
+  if(state.agendamentos.length===0){ panel.appendChild(el(`<div class="empty">Nenhum agendamento ainda.</div>`)); }
+  else {
+    const tbl = el(`<table><thead><tr><th>Cliente</th><th>Serviço</th><th>Profissional</th><th>Data/Hora</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>`);
+    const tbody = tbl.querySelector('tbody');
+    state.agendamentos.slice().reverse().forEach(a=>{
+      const cli = state.clientes.find(c=>c.id===a.clienteId);
+      const serv = state.servicos.find(s=>s.id===a.servicoId);
+      const mem = state.membros.find(m=>m.id===a.membroId);
+      const badgeClass = a.status==='confirmado'?'warn':(a.status==='concluido'?'':'danger');
+      const tr = el(`<tr>
+        <td>${cli?cli.nome:'—'}</td><td>${serv?serv.nome:'—'}</td><td>${mem?mem.nome:'—'}</td>
+        <td>${a.dataHora.replace('T',' ').slice(0,16)}</td>
+        <td><span class="badge ${badgeClass}">${a.status}</span></td>
+        <td class="row-actions"></td></tr>`);
+      const actions = tr.querySelector('.row-actions');
+      if(a.status==='confirmado'){
+        const done = el(`<button class="btn btn-outline btn-sm">concluir</button>`);
+        done.onclick=()=>{ a.status='concluido'; state.lancamentos.push({id:uid('l'), tipo:'entrada', descricao:`${serv?serv.nome:'Serviço'} — ${cli?cli.nome:''}`, valor:a.valor, data:a.dataHora.slice(0,10)}); render(); };
+        const cancel = el(`<button class="btn btn-outline btn-sm">cancelar</button>`);
+        cancel.onclick=()=>{ a.status='cancelado'; render(); };
+        actions.appendChild(done); actions.appendChild(cancel);
+      }
+      const msg = el(`<button class="btn btn-outline btn-sm">msg</button>`);
+      msg.onclick=()=> openMessageModal(a, cli, serv);
+      actions.appendChild(msg);
+      tbody.appendChild(tr);
+    });
+    panel.appendChild(tbl);
+  }
+  body.appendChild(panel);
+}
+
+function openMessageModal(a, cli, serv){
+  if(!cli){ alert('Esse agendamento não tem cliente vinculado.'); return; }
+  const overlay = el(`
+    <div class="modal-overlay">
+      <div class="modal">
+        <h3>Falar com ${cli.nome}</h3>
+        <div class="field"><label>Mensagem</label><textarea id="msgText" style="min-height:110px;">Olá ${cli.nome}! Confirmando seu horário de ${serv?serv.nome:'serviço'} dia ${a.dataHora.replace('T',' ').slice(0,16)}. Até lá!</textarea></div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" id="closeM">CANCELAR</button>
+          <button class="btn btn-primary" id="sendM">ENVIAR NO WHATSAPP</button>
+        </div>
+      </div>
+    </div>`);
+  document.body.appendChild(overlay);
+  overlay.querySelector('#closeM').onclick=()=>overlay.remove();
+  overlay.onclick=(e)=>{ if(e.target===overlay) overlay.remove(); };
+  overlay.querySelector('#sendM').onclick=()=>{
+    const text = overlay.querySelector('#msgText').value;
+    const digits = cli.whatsapp.replace(/\D/g,'');
+    const withCountry = digits.startsWith('55') ? digits : '55'+digits;
+    window.open(`https://wa.me/${withCountry}?text=${encodeURIComponent(text)}`, '_blank');
+    overlay.remove();
+  };
+}
+
+// ================= CLIENTES =================
+function renderClientes(body){
+  const panel = el(`<div class="panel"><div class="panel-head"><h3>Clientes</h3></div></div>`);
+  const addBtn = el(`<button class="btn btn-primary btn-sm">+ NOVO CLIENTE</button>`);
+  panel.querySelector('.panel-head').appendChild(addBtn);
+  addBtn.onclick=()=> openModal('Novo cliente', [
+    {key:'nome', label:'Nome'}, {key:'whatsapp', label:'WhatsApp'}, {key:'email', label:'E-mail (opcional)'},
+  ], (v)=>{
+    if(!v.nome || !v.whatsapp){ alert('Preenche nome e WhatsApp.'); return false; }
+    state.clientes.push({id:uid('c'), nome:v.nome, whatsapp:v.whatsapp, email:v.email||''});
+    render();
+  });
+
+  if(state.clientes.length===0){ panel.appendChild(el(`<div class="empty">Nenhum cliente cadastrado ainda.</div>`)); }
+  else {
+    const tbl = el(`<table><thead><tr><th>Nome</th><th>WhatsApp</th><th>Agendamentos</th><th></th></tr></thead><tbody></tbody></table>`);
+    const tbody = tbl.querySelector('tbody');
+    state.clientes.forEach(c=>{
+      const total = state.agendamentos.filter(a=>a.clienteId===c.id).length;
+      const tr = el(`<tr><td>${c.nome}</td><td class="mono">${c.whatsapp}</td><td>${total}</td><td class="row-actions"></td></tr>`);
+      const del = el(`<button class="btn btn-outline btn-sm">excluir</button>`);
+      del.onclick=()=>{ state.clientes=state.clientes.filter(x=>x.id!==c.id); render(); };
+      tr.querySelector('.row-actions').appendChild(del);
+      tbody.appendChild(tr);
+    });
+    panel.appendChild(tbl);
+  }
+  body.appendChild(panel);
+}
+
+// ================= FINANCEIRO =================
+function renderFinanceiro(body){
+  const totalEntradas = state.lancamentos.filter(l=>l.tipo==='entrada').reduce((s,l)=>s+l.valor,0);
+  const totalSaidas = state.lancamentos.filter(l=>l.tipo==='saida').reduce((s,l)=>s+l.valor,0);
+  body.appendChild(el(`
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="lbl">Entradas</div><div class="val">${fmtMoney(totalEntradas)}</div></div>
+      <div class="kpi-card"><div class="lbl">Saídas</div><div class="val">${fmtMoney(totalSaidas)}</div></div>
+      <div class="kpi-card"><div class="lbl">Saldo</div><div class="val">${fmtMoney(totalEntradas-totalSaidas)}</div></div>
+    </div>`));
+
+  const panel = el(`<div class="panel"><div class="panel-head"><h3>Lançamentos</h3></div></div>`);
+  const addBtn = el(`<button class="btn btn-primary btn-sm">+ NOVO LANÇAMENTO</button>`);
+  panel.querySelector('.panel-head').appendChild(addBtn);
+  addBtn.onclick=()=> openModal('Novo lançamento', [
+    {key:'tipo', label:'Tipo', type:'select', options:[{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}]},
+    {key:'descricao', label:'Descrição', full:true},
+    {key:'valor', label:'Valor (R$)', type:'number', value:0},
+    {key:'data', label:'Data', type:'date', value:todayISO()},
+  ], (v)=>{
+    state.lancamentos.push({id:uid('l'), tipo:v.tipo, descricao:v.descricao||'—', valor:Number(v.valor)||0, data:v.data});
+    render();
+  });
+
+  if(state.lancamentos.length===0){ panel.appendChild(el(`<div class="empty">Nenhum lançamento ainda.</div>`)); }
+  else {
+    const tbl = el(`<table><thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Valor</th></tr></thead><tbody></tbody></table>`);
+    const tbody = tbl.querySelector('tbody');
+    state.lancamentos.slice().reverse().forEach(l=>{
+      tbody.appendChild(el(`<tr><td>${l.data}</td><td>${l.descricao}</td><td><span class="badge ${l.tipo==='entrada'?'':'danger'}">${l.tipo}</span></td><td>${fmtMoney(l.valor)}</td></tr>`));
+    });
+    panel.appendChild(tbl);
+  }
+  body.appendChild(panel);
+}
+
+// ================= LINK PÚBLICO =================
+function renderLinkPublico(body){
+  const panel = el(`<div class="panel"></div>`);
+  panel.appendChild(el(`<div class="panel-head"><h3>Seu link de agendamento público</h3></div>`));
+  const box = el(`
+    <div class="link-box">
+      <span class="url" id="pubUrl">agendafacil.app/agendar/${state.tenant.slug}</span>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-outline btn-sm" id="copyBtn">copiar link</button>
+        <button class="btn btn-primary btn-sm" id="previewBtn">pré-visualizar</button>
+      </div>
+    </div>`);
+  panel.appendChild(box);
+  panel.appendChild(el(`<p style="color:var(--muted); font-size:13.5px; margin-top:16px;">Qualquer cliente que abrir esse link vê seus serviços e sua equipe, escolhe um horário disponível e agenda direto — sem precisar de login.</p>`));
+  body.appendChild(panel);
+  box.querySelector('#copyBtn').onclick=()=>{
+    navigator.clipboard?.writeText(`https://agendafacil.app/agendar/${state.tenant.slug}`);
+    alert('Link copiado!');
+  };
+  box.querySelector('#previewBtn').onclick=()=>{ state.publicMode=true; render(); };
+}
+
+// ================= CONFIGURAÇÕES =================
+function renderConfiguracoes(body){
+  const panel = el(`<div class="panel"></div>`);
+  panel.appendChild(el(`<div class="panel-head"><h3>Dados da conta</h3></div>`));
+  const form = el(`
+    <div class="form-grid">
+      <div class="field"><label>Nome da barbearia</label><input id="cfgNome" value="${state.tenant.nome}"></div>
+      <div class="field"><label>Slug (link público)</label><input id="cfgSlug" value="${state.tenant.slug}"></div>
+    </div>`);
+  panel.appendChild(form);
+  const saveBtn = el(`<button class="btn btn-primary btn-sm" style="margin-top:16px;">SALVAR</button>`);
+  saveBtn.onclick=()=>{
+    state.tenant.nome = document.getElementById('cfgNome').value.trim() || state.tenant.nome;
+    state.tenant.slug = document.getElementById('cfgSlug').value.trim() || state.tenant.slug;
+    render();
+  };
+  panel.appendChild(saveBtn);
+  body.appendChild(panel);
+
+  const planoPanel = el(`<div class="panel" style="margin-top:20px;"></div>`);
+  planoPanel.appendChild(el(`<div class="panel-head"><h3>Plano e cobrança</h3></div>`));
+  planoPanel.appendChild(el(`<p style="color:var(--muted); font-size:14px; margin:0 0 14px;">Status atual: <strong style="color:var(--gold-bright);">${state.tenant.status}</strong> — ${trialTotal()}/${state.tenant.trialLimit} agendamentos usados no teste grátis.</p>`));
+  const greennBtn = el(`<button class="btn btn-danger btn-sm">ASSINAR VIA GREENN</button>`);
+  greennBtn.onclick = greennExplain;
+  planoPanel.appendChild(greennBtn);
+  body.appendChild(planoPanel);
+}
+
+// ================= LINK PÚBLICO — PRÉ-VISUALIZAÇÃO (fluxo do cliente) =================
+function renderPublicBooking(){
+  const b = state.publicBooking;
+  const wrap = el(`<div class="login-wrap"><div class="login-box" style="max-width:520px;"></div></div>`);
+  const box = wrap.querySelector('.login-box');
+  box.appendChild(el(`
+    <div class="brandmark">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M6 4L18 16M14 4L6 16" stroke="#c9974a" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="18" r="2" stroke="#e6bd7a" stroke-width="1.4"/><circle cx="19" cy="18" r="2" stroke="#e6bd7a" stroke-width="1.4"/></svg>
+      <span class="name">${state.tenant.nome.toUpperCase()}</span>
+    </div>`));
+  box.appendChild(el(`<h2 style="font-size:26px;">Agendar horário</h2><p>Pré-visualização do link público — o que seu cliente veria.</p>`));
+
+  const form = el(`
+    <div class="field"><label>Profissional</label><select id="pbMembro">${state.membros.filter(m=>m.ativo).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('')}</select></div>
+    <div class="field"><label>Serviço</label><select id="pbServico">${state.servicos.map(s=>`<option value="${s.id}">${s.nome} — ${fmtMoney(s.preco)}</option>`).join('')}</select></div>
+    <div class="field"><label>Data</label><input id="pbData" type="date" value="${todayISO()}"></div>
+    <div class="field"><label>Hora</label><input id="pbHora" type="time" value="10:00"></div>
+    <div class="field"><label>Seu nome</label><input id="pbNome" placeholder="Nome completo"></div>
+    <div class="field"><label>WhatsApp</label><input id="pbWhats" placeholder="(11) 91234-5678"></div>
+  `);
+  box.appendChild(form);
+  const confirmBtn = el(`<button class="btn btn-primary" style="width:100%;">CONFIRMAR AGENDAMENTO</button>`);
+  confirmBtn.onclick=()=>{
+    const membroId = document.getElementById('pbMembro').value;
+    const servicoId = document.getElementById('pbServico').value;
+    const data = document.getElementById('pbData').value;
+    const hora = document.getElementById('pbHora').value;
+    const nome = document.getElementById('pbNome').value.trim();
+    const whatsapp = document.getElementById('pbWhats').value.trim();
+    if(!nome || !whatsapp){ alert('Preenche seu nome e WhatsApp.'); return; }
+    if(isLocked()){ alert('Essa barbearia está com o agendamento online temporariamente indisponível.'); return; }
+    let cliente = state.clientes.find(c=>c.whatsapp===whatsapp);
+    if(!cliente){ cliente={id:uid('c'), nome, whatsapp, email:''}; state.clientes.push(cliente); }
+    const serv = state.servicos.find(s=>s.id===servicoId);
+    runSweep(()=>{
+      state.agendamentos.push({id:uid('a'), membroId, servicoId, clienteId:cliente.id, dataHora:`${data}T${hora}:00`, status:'confirmado', valor:serv.preco});
+      alert('Agendamento confirmado! O profissional já pode ver no painel dele.');
+      state.publicMode=false; state.view='agendamentos'; render();
+    });
+  };
+  box.appendChild(confirmBtn);
+  const back = el(`<button class="btn btn-outline" style="width:100%; margin-top:10px;">← voltar pro painel</button>`);
+  back.onclick=()=>{ state.publicMode=false; render(); };
+  box.appendChild(back);
+  root.appendChild(wrap);
+}
+
+render();
+</script>
+</body>
+</html>
