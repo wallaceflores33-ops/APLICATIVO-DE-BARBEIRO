@@ -84,6 +84,9 @@ tr:last-child td{border-bottom:none;}
 .paywall{background:linear-gradient(160deg, rgba(140,47,47,0.14), var(--surface)); border:1px solid var(--crimson-bright); border-radius:14px; padding:30px; text-align:center; margin-bottom:24px;}
 .paywall h3{font-size:28px; margin:0 0 8px;}
 .paywall p{color:var(--muted); max-width:440px; margin:0 auto 18px; font-size:14.5px;}
+.email-notice{background:rgba(201,151,74,0.08); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin:0 0 16px; font-size:13.5px; color:var(--cream); text-align:left;}
+.email-notice .email-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; background:var(--bg-2); border-radius:8px; padding:9px 12px; flex-wrap:wrap;}
+.email-notice .email-row span{font-family:'IBM Plex Mono',monospace; color:var(--gold-bright); word-break:break-all;}
 @keyframes fadeUp{from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);}}
 @media (max-width:860px){
   .shell{flex-direction:column;} .sidebar{width:100%; height:auto; flex-direction:row; overflow-x:auto; position:relative; padding:12px;}
@@ -353,6 +356,15 @@ function openModal(title, fields, onSubmit, opts={}){
   document.body.appendChild(overlay);
 }
 
+function emailNotice(){
+  const email = state.session?.user?.email || '';
+  const box = el(`<div class="email-notice">⚠️ <strong>Importante:</strong> na hora de pagar na Greenn, use <strong>o mesmo e-mail do seu login</strong> — é assim que o sistema sabe qual conta liberar depois do pagamento.
+    <div class="email-row"><span>${email}</span><button class="btn btn-outline btn-sm" id="copyEmailBtn">copiar e-mail</button></div>
+  </div>`);
+  box.querySelector('#copyEmailBtn').onclick = ()=>{ navigator.clipboard?.writeText(email); alert('E-mail copiado!'); };
+  return box;
+}
+
 // ================= DASHBOARD =================
 function renderDashboard(body){
   const now = new Date();
@@ -373,9 +385,11 @@ function renderDashboard(body){
 
   if(isLocked()){
     const pw = el(`<div class="paywall"><h3>Seu teste grátis acabou</h3>
-      <p>Você já usou os ${state.tenant.trial_limit} agendamentos gratuitos. Assine pra continuar.</p>
-      <button class="btn btn-danger" id="pwBtn">ASSINAR VIA GREENN</button></div>`);
-    pw.querySelector('#pwBtn').onclick = greennExplain;
+      <p>Você já usou os ${state.tenant.trial_limit} agendamentos gratuitos. Assine pra continuar.</p></div>`);
+    pw.appendChild(emailNotice());
+    const pwBtn = el(`<button class="btn btn-danger" id="pwBtn">ASSINAR VIA GREENN</button>`);
+    pwBtn.onclick = greennExplain;
+    pw.appendChild(pwBtn);
     body.appendChild(pw);
   }
 
@@ -662,6 +676,7 @@ function renderConfiguracoes(body){
   const planoPanel = el(`<div class="panel"></div>`);
   planoPanel.appendChild(el(`<div class="panel-head"><h3>Plano e cobrança</h3></div>`));
   planoPanel.appendChild(el(`<p style="color:var(--muted); font-size:14px; margin:0 0 14px;">Status atual: <strong style="color:var(--gold-bright);">${state.tenant.status}</strong> — ${state.agendamentos.length}/${state.tenant.trial_limit} agendamentos usados no teste grátis.</p>`));
+  planoPanel.appendChild(emailNotice());
   const greennBtn = el(`<button class="btn btn-danger btn-sm">ASSINAR VIA GREENN</button>`);
   greennBtn.onclick = greennExplain;
   planoPanel.appendChild(greennBtn);
