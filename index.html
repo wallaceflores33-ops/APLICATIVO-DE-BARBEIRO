@@ -106,6 +106,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const root = document.getElementById('root');
 function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
+function appendHTML(parent, html){ const d=document.createElement('div'); d.innerHTML=html.trim(); while(d.firstChild) parent.appendChild(d.firstChild); }
 function fmtMoney(v){ return 'R$ ' + Number(v||0).toFixed(2).replace('.',','); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function slugify(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
@@ -195,14 +196,14 @@ function renderAuth(){
   function showLogin(){
     tabLogin.classList.add('active'); tabSignup.classList.remove('active');
     body.innerHTML='';
-    body.appendChild(el(`
+    appendHTML(body, `
       <h2 style="font-size:28px;">Entrar</h2>
       <p>Acesse o painel da sua barbearia.</p>
       <div id="authMsg"></div>
       <div class="field"><label>E-mail</label><input id="lEmail" type="email"></div>
       <div class="field"><label>Senha</label><input id="lSenha" type="password"></div>
       <button class="btn btn-primary" style="width:100%;" id="btnLogin">ENTRAR</button>
-    `));
+    `);
     body.querySelector('#btnLogin').onclick = async ()=>{
       const email = body.querySelector('#lEmail').value.trim();
       const password = body.querySelector('#lSenha').value.trim();
@@ -217,7 +218,7 @@ function renderAuth(){
   function showSignup(){
     tabSignup.classList.add('active'); tabLogin.classList.remove('active');
     body.innerHTML='';
-    body.appendChild(el(`
+    appendHTML(body, `
       <h2 style="font-size:28px;">Criar conta</h2>
       <p>Cria seu login e sua barbearia no Agenda Fácil.</p>
       <div id="authMsg"></div>
@@ -227,7 +228,7 @@ function renderAuth(){
       <div class="field"><label>Senha</label><input id="sSenha" type="password" placeholder="mín. 6 caracteres"></div>
       <button class="btn btn-primary" style="width:100%;" id="btnSignup">CRIAR CONTA</button>
       <div class="footnote">Dependendo da configuração do projeto, o Supabase pode pedir confirmação por e-mail antes de liberar o login.</div>
-    `));
+    `);
     body.querySelector('#btnSignup').onclick = async ()=>{
       const nome = body.querySelector('#sNome').value.trim();
       const barbearia = body.querySelector('#sBarbearia').value.trim();
